@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Gerçek zamanlı temassız nabız, HRV, solunum ve stres analizi – rPPG Biyometrik Dashboard" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>rPPG Biometric Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════════════════════════ -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <!-- Logo & Marka -->
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </span>
+        <div class="brand-text">
+          <span class="brand-name">rPPG</span>
+          <span class="brand-sub">Biometric Dashboard</span>
+        </div>
+      </div>
+
+      <!-- Durum Göstergeleri -->
+      <div class="header-status">
+        <div class="status-pill" id="statusFace">
+          <span class="status-dot" id="dotFace"></span>
+          <span id="statusFaceText">Yüz Bekleniyor</span>
+        </div>
+        <div class="status-pill" id="statusCal">
+          <span class="status-dot" id="dotCal"></span>
+          <span id="statusCalText">Kalibre Ediliyor</span>
+        </div>
+        <div class="live-badge" aria-label="Canlı akış aktif">
+          <span class="live-dot"></span>
+          CANLI
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ANA İÇERİK
+  ════════════════════════════════════════════════════════════════════ -->
+  <main class="dashboard-layout" role="main">
+
+    <!-- ── SOL: Kamera Paneli ──────────────────────────────────────── -->
+    <section class="camera-panel" aria-label="Kamera Akışı">
+      <div class="panel-header">
+        <h1 class="panel-title">
+          <span class="panel-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </span>
+          Video Akışı
+        </h1>
+        <span class="panel-badge">640 × 480 · MJPEG</span>
+      </div>
+
+      <!-- Kamera Akışı -->
+      <div class="camera-wrapper">
+        <div class="camera-frame">
+          <img
+            id="videoFeed"
+            src="/video_feed"
+            alt="rPPG kamera akışı"
+            class="camera-stream"
+            loading="lazy"
+          />
+          <!-- Köşe dekorasyon çerçevesi (CSS ile) -->
+          <div class="camera-corner tl" aria-hidden="true"></div>
+          <div class="camera-corner tr" aria-hidden="true"></div>
+          <div class="camera-corner bl" aria-hidden="true"></div>
+          <div class="camera-corner br" aria-hidden="true"></div>
+          <!-- Tarama çizgisi efekti -->
+          <div class="scan-line" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- Kalibrasyon İlerleme Çubuğu -->
+      <div class="calibration-row">
+        <div class="cal-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span id="calStatusText">Kalibrasyon Bekleniyor</span>
+        </div>
+        <div class="progress-bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="calProgressBar">
+          <div class="progress-bar-fill" id="calProgressFill"></div>
+          <span class="progress-label" id="calProgressLabel">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SAĞ: Metrik Kartları Paneli ─────────────────────────────── -->
+    <aside class="metrics-panel" aria-label="Biyometrik Metrikler">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </span>
+          Biyometrik Analiz
+        </h2>
+        <span class="panel-badge" id="updateTimer">—</span>
+      </div>
+
+      <!-- ── Metrik Kartları ──────────────────────────────────────── -->
+      <div class="metric-grid">
+
+        <!-- BPM Kartı -->
+        <article class="metric-card" id="cardBpm" aria-label="Nabız Hızı">
+          <div class="card-header">
+            <div class="card-icon-wrap bpm-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <span class="card-label">Nabız Hızı</span>
+              <span class="card-unit">BPM</span>
+            </div>
+            <div class="card-trend" id="bpmTrend" aria-label="Nabız trendi"></div>
+          </div>
+
+          <div class="card-value-wrap">
+            <span class="card-value bpm-value" id="bpmValue">—</span>
+          </div>
+
+          <div class="card-footer">
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill bpm-bar" id="bpmBar" style="width:0%"></div>
+            </div>
+            <span class="card-range">Normal: 60 – 100</span>
+          </div>
+
+          <!-- Animasyon halkası -->
+          <div class="pulse-ring" id="bpmPulseRing" aria-hidden="true"></div>
+          <div class="card-glow bpm-glow" aria-hidden="true"></div>
+        </article>
+
+        <!-- HRV Kartı -->
+        <article class="metric-card" id="cardHrv" aria-label="Kalp Hızı Değişkenliği">
+          <div class="card-header">
+            <div class="card-icon-wrap hrv-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <span class="card-label">Kalp Değişkenliği</span>
+              <span class="card-unit">ms · RMSSD</span>
+            </div>
+          </div>
+
+          <div class="card-value-wrap">
+            <span class="card-value hrv-value" id="hrvValue">—</span>
+          </div>
+
+          <div class="card-footer">
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill hrv-bar" id="hrvBar" style="width:0%"></div>
+            </div>
+            <span class="card-range">Normal: 20 – 80 ms</span>
+          </div>
+
+          <div class="card-glow hrv-glow" aria-hidden="true"></div>
+        </article>
+
+        <!-- Solunum Hızı Kartı -->
+        <article class="metric-card" id="cardRr" aria-label="Solunum Hızı">
+          <div class="card-header">
+            <div class="card-icon-wrap rr-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <span class="card-label">Solunum Hızı</span>
+              <span class="card-unit">Nefes / Dakika</span>
+            </div>
+          </div>
+
+          <div class="card-value-wrap">
+            <span class="card-value rr-value" id="rrValue">—</span>
+          </div>
+
+          <div class="card-footer">
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill rr-bar" id="rrBar" style="width:0%"></div>
+            </div>
+            <span class="card-range">Normal: 12 – 20</span>
+          </div>
+
+          <div class="card-glow rr-glow" aria-hidden="true"></div>
+        </article>
+
+        <!-- Stres Endeksi Kartı -->
+        <article class="metric-card stress-card" id="cardStress" aria-label="Stres Endeksi">
+          <div class="card-header">
+            <div class="card-icon-wrap stress-icon" id="stressIconWrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <span class="card-label">Stres Endeksi</span>
+              <span class="card-unit">HRV Tabanlı</span>
+            </div>
+          </div>
+
+          <div class="card-value-wrap stress-value-wrap">
+            <span class="card-value stress-value" id="stressValue">—</span>
+          </div>
+
+          <div class="stress-indicator-row">
+            <div class="stress-indicator" id="si-low"   data-level="Düşük">
+              <span class="si-dot"></span> Düşük
+            </div>
+            <div class="stress-indicator" id="si-normal" data-level="Normal">
+              <span class="si-dot"></span> Normal
+            </div>
+            <div class="stress-indicator" id="si-high"  data-level="Yüksek">
+              <span class="si-dot"></span> Yüksek
+            </div>
+          </div>
+
+          <div class="card-glow stress-glow" id="stressGlow" aria-hidden="true"></div>
+        </article>
+
+      </div><!-- /metric-grid -->
+
+      <!-- ── Bilgi Paneli ─────────────────────────────────────────── -->
+      <div class="info-panel">
+        <div class="info-row">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>Alın bölgesinden rPPG sinyali analizi · <strong>10 sn</strong> kalibrasyon gerektirir</span>
+        </div>
+        <div class="info-row">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M1 6s+0 4 11 4S23 6 23 6"/><path d="M1 18s+0-4 11-4 11 4 11 4"/><line x1="12" y1="2" x2="12" y2="22"/>
+          </svg>
+          <span>Nabız: Butterworth BP + FFT · HRV: RMSSD · Solunum: Düşük BP Filtre</span>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════════════════════════════════ -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <span>rPPG Biyometrik · Flask + OpenCV + MediaPipe + SciPy</span>
+      <span class="footer-sep">·</span>
+      <span>Gerçek Zamanlı Temassız Analiz</span>
+      <span class="footer-sep">·</span>
+      <span id="footerTime"></span>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
